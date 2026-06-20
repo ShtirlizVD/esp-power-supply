@@ -47,6 +47,25 @@ PCF8575 pcf(0x20);
 // INA226
 INA226 ina(0.002, 5.0);  // шунт 0.002Ω, макс ток 5A
 
+// Безопасное чтение напряжения: если INA226 не отвечает или мусор - вернём 0
+float safeGetVoltage() {
+  float v = ina.getVoltage();
+  if (v < 0 || v > 36.0) return 0.0;  // INA226 max = 36V
+  return v;
+}
+
+float safeGetCurrent() {
+  float i = ina.getCurrent();
+  if (i < -10.0 || i > 10.0) return 0.0;  // запас по диапазону
+  return i;
+}
+
+float safeGetPower() {
+  float p = ina.getPower();
+  if (p < 0 || p > 200.0) return 0.0;
+  return p;
+}
+
 // ============= ПАРАМЕТРЫ ОБМОТОК =============
 
 const float tapVoltageAC[4] = {6.38, 14.25, 20.6, 28.8};
@@ -143,7 +162,7 @@ int getOptimalTapForVoltage(float targetV) {
 void autoSwitchTap() {
   if (!outputEnabled) return;
   
-  float busV = ina.getVoltage();
+  float busV = safeGetVoltage();
   int optimal = getOptimalTapForVoltage(busV + 2.0);  // +2V запас
   
   if (optimal != currentTap) {
@@ -311,9 +330,9 @@ void handleRoot() {
 }
 
 void handleStatus() {
-  float voltage = ina.getVoltage();
-  float current = ina.getCurrent();
-  float power   = ina.getPower();
+  float voltage = safeGetVoltage();
+  float current = safeGetCurrent();
+  float power   = safeGetPower();
   
   String json = "{";
   json += "\"voltage\":" + String(voltage, 2) + ",";
