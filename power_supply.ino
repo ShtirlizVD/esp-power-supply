@@ -248,6 +248,9 @@ void handleRoot() {
     .btn-off { background: #f44336; }
     .btn-test { background: #FF9800; }
     .btn-update { background: #607D8B; font-size: 14px; padding: 10px; }
+    .btn-tap { background: #2196F3; font-size: 14px; padding: 12px; }
+    .btn-tap.active { background: #4CAF50; border: 3px solid #FF9800; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 5px 0; }
     hr { border: none; border-top: 1px solid #ddd; margin: 15px 0; }
     a { color: #2196F3; text-decoration: none; }
   </style>
@@ -280,6 +283,16 @@ void handleRoot() {
   
   <hr>
   
+  <div class="label">Ручной выбор обмотки</div>
+  <div class="btn-grid">
+    <button class="btn-tap" onclick="setTap(0)" id="tap0">6V (обмотка 1)</button>
+    <button class="btn-tap" onclick="setTap(1)" id="tap1">14V (обмотка 2)</button>
+    <button class="btn-tap" onclick="setTap(2)" id="tap2">20V (обмотка 3)</button>
+    <button class="btn-tap" onclick="setTap(3)" id="tap3">28V (обмотка 4)</button>
+  </div>
+  
+  <hr>
+  
   <button class="btn-update" onclick="location.href='/update'">OTA обновление прошивки</button>
   
   <script>
@@ -300,12 +313,24 @@ void handleRoot() {
             btn.textContent = 'ВКЛ выход';
             btn.className = 'btn-on';
           }
+          // Подсветка активной обмотки
+          for (var i = 0; i < 4; i++) {
+            var el = document.getElementById('tap' + i);
+            if (el) {
+              if (i === d.tap) { el.classList.add('active'); }
+              else { el.classList.remove('active'); }
+            }
+          }
         })
         .catch(err => console.error(err));
     }
     
     function outputToggle() {
       fetch('/toggle').then(() => update());
+    }
+    
+    function setTap(n) {
+      fetch('/tap?n=' + n).then(() => update());
     }
     
     function testRelay() {
